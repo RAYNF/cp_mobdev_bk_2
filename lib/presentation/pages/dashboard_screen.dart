@@ -2,9 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_inventory/data/models/firebase/akun_model.dart';
-import 'package:mobile_inventory/presentation/pages/dashboard/all_kategori_screen.dart';
+import 'package:mobile_inventory/presentation/pages/all_kategori_screen.dart';
 import 'package:mobile_inventory/presentation/pages/dashboard/all_history_product_screen.dart';
-import 'package:mobile_inventory/presentation/pages/dashboard/all_product_screen.dart';
+import 'package:mobile_inventory/presentation/pages/all_product_screen.dart';
+import 'package:mobile_inventory/presentation/pages/dashboard/beranda_screen.dart';
 import 'package:mobile_inventory/presentation/pages/dashboard/profil_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -83,8 +84,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     pages = <Widget>[
-      AllproductScreen(),
-      AllkategoriScreen(),
+      BerandaScreen(),
+      // AllkategoriScreen(),
       AllhistoryproductScreen(),
       ProfilScreen(
         akun: akun,
@@ -104,15 +105,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             label: "Semua",
           ),
           BottomNavigationBarItem(
-              icon: Icon(
-                Icons.book,
-              ),
-              label: "Riwayat"),
-          BottomNavigationBarItem(
             icon: Icon(
-              Icons.category_outlined,
+              Icons.book,
             ),
-            label: "Category",
+            label: "Riwayat",
           ),
           BottomNavigationBarItem(
             icon: Icon(

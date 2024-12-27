@@ -1,8 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_inventory/firebase_options.dart';
+import 'package:mobile_inventory/data/service/firebase_options.dart';
 import 'package:mobile_inventory/presentation/pages/add_categori_screen.dart';
 import 'package:mobile_inventory/presentation/pages/add_product_screen.dart';
+import 'package:mobile_inventory/presentation/pages/coba/coba_screen.dart';
 import 'package:mobile_inventory/presentation/pages/dashboard_screen.dart';
 import 'package:mobile_inventory/presentation/pages/detail_product_screen.dart';
 import 'package:mobile_inventory/presentation/pages/login_screen.dart';
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
         '/dashboard': (context) => DashboardScreen(),
         '/addproduct': (context) => AddproductScreen(),
-        '/detail': (context) => DetailproductScreen(),
+        // '/detail': (context) => DetailproductScreen(),
         '/addkategori': (context) => AddcategoriScreen()
       },
     );

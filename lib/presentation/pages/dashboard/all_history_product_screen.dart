@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_inventory/data/helpers/dbhelper.dart';
+import 'package:mobile_inventory/data/models/firebase/transaksi_model.dart';
 import 'package:mobile_inventory/data/models/sqflite/product_transaction_model.dart';
 import 'package:mobile_inventory/presentation/utils/date_format.dart';
 
@@ -14,135 +17,107 @@ class AllhistoryproductScreen extends StatefulWidget {
 }
 
 class _AllhistoryproductScreenState extends State<AllhistoryproductScreen> {
-  List<Producttransaction> listTransactions = [];
-  Dbhelper db = Dbhelper();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> _getAllTransactions() async {
-    var list = await db.getAllProdukWithTransaction();
+  bool isComplete = false;
 
-    if (list.isNotEmpty) {
-      setState(() {
-        listTransactions = list.reversed.toList();
-      });
-    } else {
-      setState(() {
-        listTransactions = [];
-      });
-    }
-  }
-
-  Future<void> deleteTransaction(int id, String name) async {
-    final db = Dbhelper();
-
-    try {
-      print("id mu $id");
-      await db.deleteTransaction(id);
-
-      setState(() {
-        listTransactions.removeWhere((transaction) => transaction.getId == id);
-      });
-
-      _getAllTransactions();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("${name} delete succes"),
-        ),
-      );
-      // Navigator.pushNamed(context, '/dashboard');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to delete ${name} because $e"),
-        ),
-      );
-    }
-  }
-
-  @override
-  void initState() {
-    _getAllTransactions();
-    super.initState();
+  Stream<QuerySnapshot<Map<String, dynamic>>> searchStream() {
+    return _firestore.collection("transaksi").snapshots();
   }
 
   @override
   Widget build(BuildContext context) {
-    return listTransactions.isEmpty
-        ? Scaffold(
-            body: Center(
-              child: Text("history kosong"),
-            ),
-          )
-        : Scaffold(
-            appBar: AppBar(
-              title: Text("Daftar Riwayat Transaksi"),
-              centerTitle: true,
-              automaticallyImplyLeading: false,
-            ),
-            body: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: ListView.builder(
-                  itemCount: listTransactions.length,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      children: [
-                        ListTile(
-                          leading: Container(
-                            width: 90,
-                            height: 90,
-                            child: Image.memory(
-                              Base64Decoder().convert(
-                                  listTransactions[index].getProductGambar),
-                              fit: BoxFit.cover, // Mengisi sepenuhnya lingkaran
-                            ),
-                          ),
-                          title: Center(
-                            child: Text(listTransactions[index].getProductType),
-                          ),
-                          subtitle: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    listTransactions[index].getProductName,
-                                  ),
-                                  SizedBox(
-                                    width: 10,
-                                  ),
-                                  Text(
-                                    listTransactions[index]
-                                        .getProductQuantity
-                                        .toString(),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                formatDate(
-                                    listTransactions[index].getProductDate),
-                              ),
-                            ],
-                          ),
-                          trailing: IconButton(
-                            onPressed: () {
-                              deleteTransaction(listTransactions[index].getId,
-                                  listTransactions[index].getProductName);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Daftar Riwayat Transaksi'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: searchStream(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-                              print(listTransactions[index].getId);
-                            },
-                            icon: Icon(Icons.remove),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        )
+          if (snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Text("Tidak ada data"),
+            );
+          }
+
+          // Menyimpan data transaksi
+          List<Transaksi> listTransaksi = [];
+
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              final document = snapshot.data!.docs[index];
+              final data = document.data();
+
+              final String nama = data['nama'];
+              final int quantity = data['quantity'];
+              final int date = data['date'];
+              final String uid = data['uid'];
+
+              final DocumentReference? transaksiRef = data['produk'];
+
+              print("data product e ${data['produk']}");
+
+              return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                future:
+                    (transaksiRef as DocumentReference<Map<String, dynamic>>)
+                        .get(),
+                builder: (context, transaksiSnapshot) {
+                  if (transaksiSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (transaksiSnapshot.hasError) {
+                    return Center(child: Text("Error memuat kategori"));
+                  }
+
+                  if (!transaksiSnapshot.hasData ||
+                      transaksiSnapshot.data!.data() == null) {
+                    return Center(child: Text("Kategori tidak ditemukan"));
+                  }
+
+                  final transaksiData =
+                      transaksiSnapshot.data!.data() as Map<String, dynamic>;
+                  final String productName =
+                      transaksiData['nama'] ?? "Nama tidak tersedia";
+
+                  listTransaksi.add(Transaksi(
+                    uid: uid,
+                    nama: nama,
+                    productName: productName,
+                    quantity: quantity,
+                    date: date,
+                  ));
+
+                  return ListTile(
+                    title: Center(child: Text(nama)),
+                    subtitle: Column(
+                      children: [
+                        Text("Produk: $productName"),
+                        Text("Quantity: $quantity"),
+                        Text("Date: $date"),
                       ],
-                    );
-                  },
-                ),
-              ),
-            ),
+                    ),
+                    trailing: IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.remove),
+                    ),
+                  );
+                },
+              );
+            },
           );
+        },
+      ),
+    );
   }
 }
