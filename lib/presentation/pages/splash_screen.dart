@@ -23,10 +23,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Future.delayed(Duration(seconds: 5), () {
-    //   Navigator.pushReplacementNamed(context, '/register');
-    // });
     User? user = _auth.currentUser;
 
     if (user != null) {

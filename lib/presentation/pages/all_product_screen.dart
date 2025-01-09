@@ -1,12 +1,7 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_inventory/data/helpers/dbhelper.dart';
 import 'package:mobile_inventory/data/models/firebase/produk_model.dart';
-import 'package:mobile_inventory/data/models/sqflite/product_models.dart';
-import 'package:mobile_inventory/data/models/sqflite/product_categories_model.dart';
 import 'package:mobile_inventory/presentation/pages/dashboard_screen.dart';
 import 'package:mobile_inventory/presentation/widgets/item_dashboard_widget.dart';
 
@@ -20,7 +15,6 @@ class AllproductScreen extends StatefulWidget {
 class _AllproductScreenState extends State<AllproductScreen> {
   FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   TextEditingController _namaController = TextEditingController();
   TextEditingController _deskripsiController = TextEditingController();
   TextEditingController _hargaController = TextEditingController();
@@ -47,7 +41,6 @@ class _AllproductScreenState extends State<AllproductScreen> {
     _namaController.clear();
     _deskripsiController.clear();
     _hargaController.clear();
-    // _suplierController.clear();
     _stockController.clear();
     _gambarController.clear();
   }
@@ -363,7 +356,6 @@ class _AllproductScreenState extends State<AllproductScreen> {
                                 },
                               );
                             }
-
                             return SizedBox.shrink();
                           },
                         );

@@ -1,9 +1,6 @@
-//belum sama didownload
-
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_inventory/data/helpers/dbhelper.dart';
 import 'package:mobile_inventory/data/models/sqflite/kategories_model.dart';
@@ -63,7 +60,6 @@ class _AddproductScreenState extends State<AddproductScreen> {
         'nama': nama!.text,
         'deskripsi': deskripsi!.text,
         'harga': int.parse(harga!.text),
-        // 'kategori': int.parse(kategori!.text),
         'kategori': selectedKategoriId!,
         'stock': int.parse(stock!.text),
         'gambar': imageBase64,
@@ -188,15 +184,13 @@ class _AddproductScreenState extends State<AddproductScreen> {
               value: selectedKategoriId,
               items: kategoriList.map((kategori) {
                 return DropdownMenuItem<int>(
-                  value:
-                      kategori.getId, // Nilai yang dikirim adalah ID kategori
-                  child: Text(kategori.getName), // Nama yang ditampilkan
+                  value: kategori.getId,
+                  child: Text(kategori.getName),
                 );
               }).toList(),
               onChanged: (value) {
                 setState(() {
-                  selectedKategoriId =
-                      value; // Perbarui ID kategori yang dipilih
+                  selectedKategoriId = value;
                 });
               },
               decoration: InputDecoration(

@@ -5,7 +5,3 @@ class Kategori {
 
   Kategori(this.uid, {required this.nama, required this.deskripsi});
 }
-
-// List<Kategori> listKategori = [
-//   Kategori(nama: "Makanan", deskripsi: "Kategori makanan")
-// ];

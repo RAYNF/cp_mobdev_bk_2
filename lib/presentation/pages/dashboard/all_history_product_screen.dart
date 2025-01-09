@@ -1,11 +1,6 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_inventory/data/helpers/dbhelper.dart';
 import 'package:mobile_inventory/data/models/firebase/transaksi_model.dart';
-import 'package:mobile_inventory/data/models/sqflite/product_transaction_model.dart';
 import 'package:mobile_inventory/presentation/utils/date_format.dart';
 
 class AllhistoryproductScreen extends StatefulWidget {
@@ -23,6 +18,10 @@ class _AllhistoryproductScreenState extends State<AllhistoryproductScreen> {
 
   Stream<QuerySnapshot<Map<String, dynamic>>> searchStream() {
     return _firestore.collection("transaksi").snapshots();
+  }
+
+  Future<void> deleteTransaksi(String docIdTransaksi) async {
+    await _firestore.collection('transaksi').doc(docIdTransaksi).delete();
   }
 
   @override
@@ -48,7 +47,6 @@ class _AllhistoryproductScreenState extends State<AllhistoryproductScreen> {
             );
           }
 
-          // Menyimpan data transaksi
           List<Transaksi> listTransaksi = [];
 
           return ListView.builder(
@@ -76,24 +74,15 @@ class _AllhistoryproductScreenState extends State<AllhistoryproductScreen> {
                     return Center(child: CircularProgressIndicator());
                   }
 
-                  if (transaksiSnapshot.hasError) {
-                    return Center(child: Text("Error memuat kategori"));
-                  }
-
-                  if (!transaksiSnapshot.hasData ||
-                      transaksiSnapshot.data!.data() == null) {
-                    return Center(child: Text("Kategori tidak ditemukan"));
-                  }
-
-                  final transaksiData =
-                      transaksiSnapshot.data!.data() as Map<String, dynamic>;
-                  final String productName =
-                      transaksiData['nama'] ?? "Nama tidak tersedia";
+                  final produkTransaksiData = transaksiSnapshot.data?.data();
+                  final produkNama = produkTransaksiData == null
+                      ? "produk tidak ada"
+                      : (produkTransaksiData as Map<String, dynamic>)['nama'];
 
                   listTransaksi.add(Transaksi(
                     uid: uid,
                     nama: nama,
-                    productName: productName,
+                    productName: produkNama,
                     quantity: quantity,
                     date: date,
                   ));
@@ -102,13 +91,15 @@ class _AllhistoryproductScreenState extends State<AllhistoryproductScreen> {
                     title: Center(child: Text(nama)),
                     subtitle: Column(
                       children: [
-                        Text("Produk: $productName"),
-                        Text("Quantity: $quantity"),
-                        Text("Date: $date"),
+                        Text("Produk: $produkNama"),
+                        Text("Quantity:$quantity"),
+                        Text("Date: ${formatDate(date)}"),
                       ],
                     ),
                     trailing: IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        deleteTransaksi(snapshot.data!.docs[index].id);
+                      },
                       icon: Icon(Icons.remove),
                     ),
                   );

@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_inventory/data/models/firebase/produk_model.dart';
 import 'package:mobile_inventory/data/models/firebase/transaksi_model.dart';
 import 'package:mobile_inventory/presentation/pages/all_product_screen.dart';
 import 'package:mobile_inventory/presentation/pages/dashboard_screen.dart';
+import 'package:mobile_inventory/presentation/utils/date_format.dart';
 import 'package:mobile_inventory/presentation/utils/jenis_transaksi.dart';
 
 class DetailproductScreen extends StatefulWidget {
@@ -20,7 +22,6 @@ class DetailproductScreen extends StatefulWidget {
 class _DetailproductScreenState extends State<DetailproductScreen> {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseAuth _auth = FirebaseAuth.instance;
-
   TextEditingController _namaController = TextEditingController();
   TextEditingController _deskripsiController = TextEditingController();
   TextEditingController _hargaController = TextEditingController();
@@ -32,6 +33,7 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
   String? selectedSupplierId;
   String? selectedProductId;
   String? nama;
+  DateTime? _selectedDate;
 
   void clearText() {
     _namaController.clear();
@@ -40,6 +42,20 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
     _stockController.clear();
     _gambarController.clear();
     _quantityController.clear();
+  }
+
+  Future<void> _pickDate() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null && pickedDate != _selectedDate) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
   }
 
   Future<List<QueryDocumentSnapshot>> fetchKategori() async {
@@ -133,6 +149,10 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
     }));
   }
 
+  Future<void> deleteTransaksi(String docIdTransaksi) async {
+    await _firestore.collection('transaksi').doc(docIdTransaksi).delete();
+  }
+
   Stream<QuerySnapshot<Map<String, dynamic>>> searchStream() {
     return _firestore
         .collection('transaksi')
@@ -143,39 +163,12 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
         .snapshots();
   }
 
-  // Future<void> addTransaksi() async {
-  //   // Referensi ke produk yang sedang diakses
-  //   DocumentReference productRef =
-  //       _firestore.collection('produk').doc(widget.transaksiDocId);
-
-  //   try {
-  //     await _firestore.collection('transaksi').add({
-  //       'uid': _auth.currentUser!.uid,
-  //       'nama': nama, // Nama produk
-  //       'produk': productRef, // Referensi produk
-  //       'quantity': int.parse(_quantityController.text), // Kuantitas
-  //       'date': int.parse(_stockController.text), // Tanggal
-  //     });
-
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Transaksi berhasil ditambahkan')),
-  //     );
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Gagal menambahkan transaksi: $e')),
-  //     );
-  //   }
-  // }
-
-  Future<void> addTransaksi(int quantity, int tanggal) async {
-    // Referensi ke produk yang sedang diakses
+  Future<void> addTransaksi(int quantity) async {
     DocumentReference productRef =
         _firestore.collection('produk').doc(widget.transaksiDocId);
 
     try {
       print("Memulai proses transaksi...");
-
-      // Ambil data produk terkini
       DocumentSnapshot productSnapshot = await productRef.get();
       print("Data produk berhasil diambil: ${productSnapshot.data()}");
 
@@ -187,31 +180,23 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
           productSnapshot.data() as Map<String, dynamic>;
       int currentStock = productData['stock'] ?? 0;
       print(currentStock);
-      // int transactionQuantity = int.parse(_quantityController.text);
-      // print(transactionQuantity.toString());
-
-      // Validasi stok
       if (nama == 'Pengeluaran' && quantity > currentStock) {
         throw Exception('Stok tidak mencukupi untuk Pengeluaran');
       }
-
-      // Hitung stok baru
       int newStock = nama == 'Pengeluaran'
           ? currentStock - quantity
           : currentStock + quantity;
-      print("Stok baru yang dihitung: $newStock");
 
-      // Tambahkan transaksi ke koleksi transaksi
+      print("Stok baru yang dihitung: $newStock");
       await _firestore.collection('transaksi').add({
         'uid': _auth.currentUser!.uid,
         'nama': nama,
         'produk': productRef,
         'quantity': quantity,
-        'date': tanggal,
+        'date': _selectedDate!.microsecondsSinceEpoch,
       });
       print("Transaksi berhasil ditambahkan.");
 
-      // Perbarui stok produk
       await productRef.update({'stock': newStock});
       print("Stok produk berhasil diperbarui.");
 
@@ -295,8 +280,9 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
                                   hintText: 'harga',
                                 ),
                               ),
-                              const SizedBox(height: 10),
-                              // Dropdown kategori
+                              const SizedBox(
+                                height: 10,
+                              ),
                               FutureBuilder<List<QueryDocumentSnapshot>>(
                                 future: fetchKategori(),
                                 builder: (context, snapshot) {
@@ -491,22 +477,16 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
                         children: [
                           Text("History Product"),
                           ElevatedButton(
-                              onPressed: () {
-                                // _getAllTransactionsByProductId(product.id!);
-                                // print(product.id!);
-                              },
-                              child: Text("Riwayat"))
+                              onPressed: () {}, child: Text("Riwayat"))
                         ],
                       ),
                       SizedBox(
                         height: 20,
                       ),
-
-                      //tampilkan data
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8),
                         child: Container(
-                          height: 200, // Memberikan batasan tinggi
+                          height: 200,
                           child: StreamBuilder<
                               QuerySnapshot<Map<String, dynamic>>>(
                             stream: searchStream(),
@@ -522,21 +502,16 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
                                   child: Text("Tidak ada data"),
                                 );
                               }
-
-                              // Menyimpan data transaksi
                               List<Transaksi> listTransaksi = [];
-
                               return ListView.builder(
                                 itemCount: snapshot.data!.docs.length,
                                 itemBuilder: (context, index) {
                                   final document = snapshot.data!.docs[index];
                                   final data = document.data();
-
                                   final String nama = data['nama'];
                                   final int quantity = data['quantity'];
                                   final int date = data['date'];
                                   final String uid = data['uid'];
-
                                   final DocumentReference? transaksiRef =
                                       data['produk'];
 
@@ -554,31 +529,18 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
                                             child: CircularProgressIndicator());
                                       }
 
-                                      if (transaksiSnapshot.hasError) {
-                                        return Center(
-                                            child:
-                                                Text("Error memuat kategori"));
-                                      }
-
-                                      if (!transaksiSnapshot.hasData ||
-                                          transaksiSnapshot.data!.data() ==
-                                              null) {
-                                        return Center(
-                                            child: Text(
-                                                "Kategori tidak ditemukan"));
-                                      }
-
-                                      final transaksiData =
-                                          transaksiSnapshot.data!.data()
-                                              as Map<String, dynamic>;
-                                      final String productName =
-                                          transaksiData['nama'] ??
-                                              "Nama tidak tersedia";
+                                      final produkTransaksiData =
+                                          transaksiSnapshot.data?.data();
+                                      final produkNama = produkTransaksiData ==
+                                              null
+                                          ? "produk tidak ada"
+                                          : (produkTransaksiData
+                                              as Map<String, dynamic>)['nama'];
 
                                       listTransaksi.add(Transaksi(
                                         uid: uid,
                                         nama: nama,
-                                        productName: productName,
+                                        productName: produkNama,
                                         quantity: quantity,
                                         date: date,
                                       ));
@@ -587,13 +549,16 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
                                         title: Center(child: Text(nama)),
                                         subtitle: Column(
                                           children: [
-                                            Text("Produk: $productName"),
-                                            Text("Quantity: $quantity"),
-                                            Text("Date: $date"),
+                                            Text("Produk: $produkNama"),
+                                            Text("Quantity:$quantity"),
+                                            Text("Date: ${formatDate(date)}"),
                                           ],
                                         ),
                                         trailing: IconButton(
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            deleteTransaksi(
+                                                snapshot.data!.docs[index].id);
+                                          },
                                           icon: Icon(Icons.remove),
                                         ),
                                       );
@@ -647,12 +612,19 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
                               hintText: 'quantity',
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            keyboardType: TextInputType.numberWithOptions(),
-                            controller: _stockController,
-                            decoration: InputDecoration(
-                              hintText: 'date',
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          GestureDetector(
+                            onTap: _pickDate,
+                            child: AbsorbPointer(
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                    labelText: _selectedDate == null
+                                        ? "pilih tanggal"
+                                        : "Tanggal: ${DateFormat('EEEE, dd MMM yyyy').format(_selectedDate!)}",
+                                    border: OutlineInputBorder()),
+                              ),
                             ),
                           ),
                         ],
@@ -667,8 +639,7 @@ class _DetailproductScreenState extends State<DetailproductScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          addTransaksi(int.parse(_quantityController.text),
-                              int.parse(_stockController.text));
+                          addTransaksi(int.parse(_quantityController.text));
                           clearText();
                           Navigator.pop(context);
                         },

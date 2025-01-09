@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile_inventory/data/models/firebase/supplier_model.dart';
+import 'package:mobile_inventory/presentation/pages/map/coba_screen.dart';
 import 'package:mobile_inventory/presentation/pages/dashboard_screen.dart';
 import 'package:mobile_inventory/presentation/pages/detail_suplier_screen.dart';
 
@@ -27,9 +28,6 @@ class _AllSuplierScreenState extends State<AllSuplierScreen> {
     TextEditingController _kontakController = TextEditingController();
     TextEditingController _latitudeController = TextEditingController();
     TextEditingController _longtitudeController = TextEditingController();
-    TextEditingController _searchController = TextEditingController();
-
-    bool isComplete = false;
 
     Future<void> deleteSupplier(String transaksiDocId) async {
       await _firestore.collection('supplier').doc(transaksiDocId).delete();
@@ -154,7 +152,25 @@ class _AllSuplierScreenState extends State<AllSuplierScreen> {
                     const SizedBox(
                       height: 10,
                     ),
-                    Container()
+                    ElevatedButton(
+                        onPressed: () async {
+                          final selectedLocation = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CobaScreen(),
+                            ),
+                          );
+
+                          if (selectedLocation != null) {
+                            setState(() {
+                              _latitudeController.text =
+                                  selectedLocation['latitude'].toString();
+                              _longtitudeController.text =
+                                  selectedLocation['longitude'].toString();
+                            });
+                          }
+                        },
+                        child: Text("Map"))
                   ],
                 ),
               ),
@@ -192,28 +208,6 @@ class _AllSuplierScreenState extends State<AllSuplierScreen> {
       ),
       body: Column(
         children: [
-          // Padding(
-          //   padding: EdgeInsets.symmetric(
-          //     vertical: 15,
-          //     horizontal: 10,
-          //   ),
-          //   child: TextField(
-          //     decoration: InputDecoration(
-          //       labelText: "Search",
-          //       prefixIcon: Icon(
-          //         Icons.search,
-          //       ),
-          //       border: OutlineInputBorder(),
-          //     ),
-          //     onChanged: (textEntered) {
-          //       searchStream(textEntered);
-
-          //       setState(() {
-          //         _searchController.text = textEntered;
-          //       });
-          //     },
-          //   ),
-          // ),
           SizedBox(
             height: 20,
           ),
@@ -251,15 +245,6 @@ class _AllSuplierScreenState extends State<AllSuplierScreen> {
                           latitude: latitude,
                           longtitude: longtitude);
                     }).toList();
-                    // return ListView.builder(
-                    //     shrinkWrap: true,
-                    //     itemCount: listProduk.length,
-                    //     itemBuilder: (context, index) {
-                    //       return ItemdashboardWidget(
-                    //           transaksiDocId: snapshot.data!.docs[index].id,
-                    //           produk: listProduk[index]);
-                    //     });
-
                     return ListView.builder(
                         itemCount: listProduk.length,
                         itemBuilder: (context, index) {

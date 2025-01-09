@@ -1,10 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_inventory/data/helpers/dbhelper.dart';
 import 'package:mobile_inventory/data/models/firebase/kategori_model.dart';
 import 'package:mobile_inventory/data/models/sqflite/kategories_model.dart';
-import 'package:mobile_inventory/presentation/pages/add_categori_screen.dart';
 import 'package:mobile_inventory/presentation/pages/dashboard_screen.dart';
 import 'package:mobile_inventory/presentation/widgets/item_kategori_widget.dart';
 
@@ -17,45 +15,13 @@ class AllkategoriScreen extends StatefulWidget {
 
 class _AllKategoriScreenState extends State<AllkategoriScreen> {
   List<Kategories> listKategori = [];
-  // Dbhelper db = Dbhelper();
 
   FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   TextEditingController _namaController = TextEditingController();
   TextEditingController _deskripsiController = TextEditingController();
   TextEditingController _searchController = TextEditingController();
   bool isComplete = false;
-
-  // Future<void> _getAllKategori() async {
-  //   var list = await db.getAllKategoris();
-
-  //   setState(() {
-  //     listKategori = list;
-  //   });
-  // }
-
-  // Future<void> deleteKategori(int id, String name) async {
-  //   final db = Dbhelper();
-
-  //   try {
-  //     await db.deleteKategories(id);
-
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text("${name} delete succes"),
-  //       ),
-  //     );
-
-  //     Navigator.pushNamed(context, '/dashboard');
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text("Failed to delete ${name} because $e"),
-  //       ),
-  //     );
-  //   }
-  // }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> searchStream(String textEntered) {
     if (textEntered.isEmpty) {
@@ -75,7 +41,6 @@ class _AllKategoriScreenState extends State<AllkategoriScreen> {
 
   @override
   void initState() {
-    // _getAllKategori();
     super.initState();
   }
 
@@ -101,7 +66,6 @@ class _AllKategoriScreenState extends State<AllkategoriScreen> {
         backgroundColor: Colors.yellow,
         child: Icon(Icons.add),
         onPressed: () {
-          // Navigator.pushNamed(context, '/addkategori');
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -162,37 +126,7 @@ class _AllKategoriScreenState extends State<AllkategoriScreen> {
           ),
         ),
       ),
-      body:
-          // child: Padding(
-          //   padding: EdgeInsets.all(8),
-          //   child: ListView.builder(
-          //     itemCount: listKategori.length,
-          //     itemBuilder: (context, index) {
-          //       return ListTile(
-          //         leading: IconButton(
-          //           onPressed: () {
-          //             // deleteKategori(
-          //             //     listKategori[index].getId, listKategori[index].getName);
-          //           },
-          //           icon: Icon(Icons.remove),
-          //         ),
-          //         trailing: IconButton(
-          //             onPressed: () {
-          //               Navigator.push(context,
-          //                   MaterialPageRoute(builder: (context) {
-          //                 return AddcategoriScreen(
-          //                   kategori: listKategori[index],
-          //                 );
-          //               }));
-          //             },
-          //             icon: Icon(Icons.edit)),
-          //         title: Text(listKategori[index].getName),
-          //         subtitle: Text(listKategori[index].getDeskripsi),
-          //       );
-          //     },
-          //   ),
-          // ),
-          Column(
+      body: Column(
         children: [
           Padding(
             padding: EdgeInsets.symmetric(

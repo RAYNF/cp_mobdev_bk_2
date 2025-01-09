@@ -16,5 +16,5 @@ TextStyle headerStyle({int level = 1, bool dark = true}) {
 }
 
 var buttonStyle = ElevatedButton.styleFrom(
-    padding: const EdgeInsets.symmetric(vertical: 15),backgroundColor: primaryColor
-);
+    padding: const EdgeInsets.symmetric(vertical: 15),
+    backgroundColor: primaryColor);

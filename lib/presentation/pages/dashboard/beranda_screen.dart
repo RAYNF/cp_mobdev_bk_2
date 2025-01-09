@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile_inventory/presentation/pages/all_product_screen.dart';
 import 'package:mobile_inventory/presentation/pages/all_kategori_screen.dart';
 import 'package:mobile_inventory/presentation/pages/all_suplier_screen.dart';
-import 'package:mobile_inventory/presentation/utils/styles.dart';
 import 'package:mobile_inventory/presentation/widgets/item_beranda_widget.dart';
 
 class BerandaScreen extends StatelessWidget {
@@ -14,7 +13,6 @@ class BerandaScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final FirebaseAuth _auth = FirebaseAuth.instance;
     final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
     bool isComplate = false;
 
     Future<int> getTotalProduct() async {
